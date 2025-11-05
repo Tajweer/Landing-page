@@ -836,7 +836,7 @@
     document.getElementById('year').textContent = new Date().getFullYear();
 
     // Live price drop demo
-    const state = { current: 149, previous: 199, min: 79, step: 5, seconds: 2, interval: null, countdown: null };
+    const state = { current: 149, start: 149, previous: 199, min: 79, step: 5, seconds: 2, interval: null, countdown: null };
     const priceAmountEl = document.getElementById('livePriceAmount');
     const prevAmountEl = document.getElementById('prevPriceAmount');
     const meter = document.getElementById('meterSpan');
@@ -868,11 +868,9 @@
         state.current = Math.max(state.min, state.current - state.step);
         render(); startCountdown();
       } else {
-        clearInterval(state.interval);
-        const cdEnEl = document.getElementById('countdownEn');
-        const cdArEl = document.getElementById('countdownAr');
-        if (cdEnEl) cdEnEl.textContent = '—';
-        if (cdArEl) cdArEl.textContent = '—';
+        // Reset to start price and continue the loop
+        state.current = state.start;
+        render(); startCountdown();
       }
     }
 
@@ -886,10 +884,12 @@
 
     // Auction demo animation - Real auction with bidding
     const auctionState = { 
-      current: 89, 
+      current: 89,
+      start: 89,
       max: 150, 
       step: 5, 
-      seconds: 45, 
+      seconds: 45,
+      startSeconds: 45,
       interval: null, 
       countdown: null,
       bidders: 3,
@@ -925,15 +925,32 @@
       clearInterval(auctionState.countdown);
       auctionState.countdown = setInterval(() => {
         t -= 1;
+        auctionState.seconds = t;
         if (auctionCountdownEl) auctionCountdownEl.textContent = Math.max(0, t);
         if (auctionCountdownArEl) auctionCountdownArEl.textContent = Math.max(0, t);
         if (t <= 0) {
           clearInterval(auctionState.countdown);
           clearInterval(auctionState.interval);
-          if (auctionCountdownEl) auctionCountdownEl.textContent = 'ENDED';
-          if (auctionCountdownArEl) auctionCountdownArEl.textContent = 'انتهى';
+          // Reset auction and restart
+          resetAuction();
         }
       }, 1000);
+    }
+    
+    function resetAuction() {
+      // Reset all values to initial state
+      auctionState.current = auctionState.start;
+      auctionState.seconds = auctionState.startSeconds;
+      auctionState.bidders = 3;
+      
+      // Update display
+      updateAuctionPrice();
+      updateBidderCount();
+      
+      // Restart the auction after a brief pause
+      setTimeout(() => {
+        startAuctionDemo();
+      }, 2000); // 2 second pause before restarting
     }
 
     function simulateBid() {
